@@ -1,6 +1,6 @@
 /* Service worker — la carte fonctionne hors ligne sur iPad.
    Changer CACHE à chaque mise à jour des données. */
-var CACHE = 'carte-vins-v2';
+var CACHE = 'carte-vins-v3';
 var FILES = [
   './', './index.html', './app.js', './data.js',
   './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'

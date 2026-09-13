@@ -267,6 +267,11 @@
   /* ---------- rendu ---------- */
   var LAST_TOKENS = [];
 
+  function fermerFiches() {
+    var ouvertes = el.res.querySelectorAll('.card.open');
+    for (var i = 0; i < ouvertes.length; i++) ouvertes[i].classList.remove('open');
+  }
+
   function highlight(text) {
     if (!text) return '';
     if (!LAST_TOKENS.length) return esc(text);
@@ -357,7 +362,12 @@
         '<div class="line"><b>Carte</b>' + esc(v.label) + '</div>' +
       '</div>';
 
-    d.onclick = function () { d.classList.toggle('open'); };
+    // une seule fiche ouverte à la fois : le clic suivant referme la précédente
+    d.onclick = function () {
+      var etait = d.classList.contains('open');
+      fermerFiches();
+      if (!etait) d.classList.add('open');
+    };
     return d;
   }
 
@@ -447,6 +457,15 @@
   el.region.onchange = function () { state.region = el.region.value; state.limit = 60; el.region.classList.toggle('on', !!state.region); render(); };
   el.tri.onchange = function () { state.tri = el.tri.value; state.limit = 60; render(); };
   el.more.onclick = function () { state.limit += 80; render(); };
+
+  // un clic ailleurs dans la page referme aussi la fiche ouverte
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.closest && e.target.closest('.card')) return;
+    fermerFiches();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') fermerFiches();
+  });
 
   window.addEventListener('scroll', function () {
     if (el.more.hidden) return;
