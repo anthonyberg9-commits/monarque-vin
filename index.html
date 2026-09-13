@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Carte des vins</title>
+<meta name="description" content="Recherche interne de la carte des vins">
+<meta name="theme-color" content="#17110d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vins">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+:root{
+  --radius-card:14px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --serif:ui-serif,Georgia,'Iowan Old Style','Palatino Linotype',Palatino,serif;
+  --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+
+  /* — soir : contrastes relevés pour la lecture en service — */
+  --bg:#171210; --bg-elevated:#241c16; --bg-card:#221a15; --bg-card-hover:#2a2019;
+  --header-bg:rgba(23,18,16,.94);
+  --line:#4a382a; --line-soft:#362a20;
+  --copper:#e09a63; --amber:#f0bd76; --wine:#b8455a; --wine-soft:#d8798c;
+  --text:#f7f1e8; --text-muted:#d3c4ae; --text-faint:#a4937c;
+  --mark-bg:rgba(240,189,118,.26); --mark-fg:#f7d9a4;
+  --chip-fg:#fff; --verre-bg:#e09a63; --verre-fg:#20160f;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f1e8; --bg-elevated:#fffbf4; --bg-card:#fffdf8; --bg-card-hover:#fbf4e8;
+    --header-bg:rgba(246,241,232,.94);
+    --line:#d8cab5; --line-soft:#e7ddcd;
+    --copper:#9a5220; --amber:#8a5410; --wine:#8e2f42; --wine-soft:#a8455a;
+    --text:#231a13; --text-muted:#564a3d; --text-faint:#7d6e5e;
+    --mark-bg:rgba(200,140,40,.24); --mark-fg:#6b4406;
+    --chip-fg:#fff; --verre-bg:#9a5220; --verre-fg:#fff;
+    --shadow-sm:0 1px 2px rgba(80,60,35,.10);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f6f1e8; --bg-elevated:#fffbf4; --bg-card:#fffdf8; --bg-card-hover:#fbf4e8;
+  --header-bg:rgba(246,241,232,.94);
+  --line:#d8cab5; --line-soft:#e7ddcd;
+  --copper:#9a5220; --amber:#8a5410; --wine:#8e2f42; --wine-soft:#a8455a;
+  --text:#231a13; --text-muted:#564a3d; --text-faint:#7d6e5e;
+  --mark-bg:rgba(200,140,40,.24); --mark-fg:#6b4406;
+  --chip-fg:#fff; --verre-bg:#9a5220; --verre-fg:#fff;
+  --shadow-sm:0 1px 2px rgba(80,60,35,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--serif);
+  font-size:16px; line-height:1.45;
+  padding-bottom:env(safe-area-inset-bottom);
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select{font:inherit;color:inherit}
+
+/* ---------- en-tête ---------- */
+header{
+  position:sticky; top:0; z-index:20; background:var(--header-bg);
+  backdrop-filter:saturate(140%) blur(14px); -webkit-backdrop-filter:saturate(140%) blur(14px);
+  border-bottom:1px solid var(--line-soft);
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 8px;
+}
+.title-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+h1{font-size:21px;margin:0;letter-spacing:.2px;font-weight:600}
+h1 .dot{color:var(--wine-soft)}
+.count{font-family:var(--ui);font-size:12.5px;color:var(--text-muted);margin-left:auto;letter-spacing:.3px}
+#theme{margin-left:10px;align-self:center;flex:0 0 auto;width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--line);background:var(--bg-elevated);color:var(--text-muted);
+  font-size:14px;line-height:1;cursor:pointer;transition:all .16s var(--ease)}
+#theme:hover{border-color:var(--copper);color:var(--text)}
+
+.searchbox{position:relative;display:flex;align-items:center}
+.searchbox svg{position:absolute;left:12px;width:17px;height:17px;stroke:var(--text-faint);fill:none;stroke-width:2}
+#q{
+  width:100%; padding:12px 40px 12px 38px; border-radius:var(--radius-pill);
+  background:var(--bg-elevated); border:1px solid var(--line);
+  font-family:var(--ui); font-size:16px; outline:none;
+  transition:border-color .18s var(--ease), background .18s var(--ease);
+}
+#q::placeholder{color:var(--text-faint)}
+#q::-webkit-search-cancel-button,#q::-webkit-search-decoration{-webkit-appearance:none;display:none}
+#q:focus{border-color:var(--copper);background:var(--bg-card-hover)}
+#clear{
+  position:absolute;right:6px;width:30px;height:30px;border:0;background:transparent;
+  color:var(--text-faint);font-size:20px;line-height:1;border-radius:50%;cursor:pointer;display:none
+}
+#clear.on{display:block}
+
+.chips{display:flex;gap:7px;overflow-x:auto;padding:10px 0 4px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;padding:6px 13px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:transparent;color:var(--text-muted);
+  font-family:var(--ui);font-size:13px;cursor:pointer;white-space:nowrap;
+  transition:all .16s var(--ease);
+}
+.chip:hover{border-color:var(--copper);color:var(--text)}
+.chip.on{background:var(--wine);border-color:var(--wine);color:var(--chip-fg)}
+.chip.on.verre{background:var(--verre-bg);border-color:var(--verre-bg);color:var(--verre-fg)}
+
+.selects{display:flex;gap:8px;padding:6px 0 4px}
+.selects select{
+  flex:1;min-width:0;padding:8px 10px;border-radius:9px;background:var(--bg-elevated);
+  border:1px solid var(--line);font-family:var(--ui);font-size:13.5px;color:var(--text-muted);
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-faint) 50%),linear-gradient(135deg,var(--text-faint) 50%,transparent 50%);
+  background-position:calc(100% - 14px) 15px, calc(100% - 9px) 15px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:26px;
+}
+.selects select.on{color:var(--text);border-color:var(--copper)}
+
+/* ---------- liste ---------- */
+main{padding:12px 16px 60px;max-width:860px;margin:0 auto}
+.group{font-family:var(--ui);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-muted);margin:22px 2px 9px;display:flex;align-items:center;gap:9px}
+.group::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+.group:first-child{margin-top:4px}
+
+.card{
+  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:var(--radius-card);
+  padding:13px 15px;margin-bottom:9px;cursor:pointer;box-shadow:var(--shadow-sm);
+  transition:background .16s var(--ease),border-color .16s var(--ease);
+  position:relative;overflow:hidden;
+}
+.card:hover{background:var(--bg-card-hover);border-color:var(--line)}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,transparent)}
+.card.rouge{--c:#a33249} .card.blanc{--c:#c9a83f} .card.bulles{--c:#9fb0bd}
+.card.rosé{--c:#d96f86} .card.orange{--c:#cf7a26} .card.apéritif{--c:#8a6f4e}
+
+.row1,.row2,.row3{padding-right:104px}
+.row1{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.prod{font-weight:600;font-size:18px;letter-spacing:.1px}
+.cuvee{color:var(--amber);font-style:italic;font-size:15.5px}
+.prices{position:absolute;top:12px;right:14px;text-align:right;font-family:var(--ui);white-space:nowrap}
+.pb{font-size:17px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.pv{display:block;font-size:12.5px;color:var(--copper);margin-top:2px;font-variant-numeric:tabular-nums}
+.row2{color:var(--text-muted);font-size:15.5px;margin-top:3px}
+.row2 .mill{color:var(--text);font-variant-numeric:tabular-nums}
+.row3{font-family:var(--ui);font-size:13px;color:var(--text-muted);margin-top:7px;
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{border:1px solid var(--line);border-radius:var(--radius-pill);padding:1px 8px}
+.tag.verre{border-color:var(--copper);color:var(--copper);font-weight:600}
+.tag.mag{border-color:var(--wine-soft);color:var(--wine-soft)}
+mark{background:var(--mark-bg);color:var(--mark-fg);border-radius:3px;padding:0 2px}
+
+.detail{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
+  font-family:var(--ui);font-size:13.5px;color:var(--text-muted);line-height:1.65}
+.card.open .detail{display:block}
+.detail b{color:var(--text-faint);font-weight:700;
+  text-transform:uppercase;font-size:11px;letter-spacing:.1em;margin-right:6px}
+.detail .line{margin-bottom:4px}
+.deg{margin-bottom:10px;padding-bottom:9px;border-bottom:1px dashed var(--line-soft)}
+.deg .line{margin-bottom:5px;color:var(--text)}
+.deg b{color:var(--copper)}
+.accords{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.acc{border:1px solid var(--line);border-radius:var(--radius-pill);padding:2px 9px;
+  font-size:12.5px;color:var(--text-muted);background:var(--bg-elevated)}
+.service{color:var(--text-faint);font-size:12.5px;letter-spacing:.2px;margin-top:7px}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text-faint)}
+.empty .big{font-size:34px;margin-bottom:12px}
+.empty p{font-family:var(--ui);font-size:14px;margin:6px 0}
+.hints{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:16px}
+.hint{font-family:var(--ui);font-size:12.5px;padding:5px 11px;border:1px solid var(--line);
+  border-radius:var(--radius-pill);color:var(--text-muted);cursor:pointer}
+.hint:hover{border-color:var(--copper);color:var(--text)}
+#more{display:block;margin:18px auto 0;padding:9px 20px;border-radius:var(--radius-pill);
+  background:var(--bg-elevated);border:1px solid var(--line);color:var(--text-muted);
+  font-family:var(--ui);font-size:13px;cursor:pointer}
+footer{text-align:center;font-family:var(--ui);font-size:11px;color:var(--text-faint);padding:26px 16px 40px}
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row">
+    <h1>Carte des vins<span class="dot">.</span></h1>
+    <span class="count" id="count"></span>
+    <button id="theme" type="button" aria-label="Basculer jour / soir">☾</button>
+  </div>
+  <div class="searchbox">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" inputmode="search" autocomplete="off" autocorrect="off"
+           spellcheck="false" placeholder="chenin, bourgogne sous 150, bulles au verre, ris de veau…">
+    <button id="clear" aria-label="Effacer">×</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="selects">
+    <select id="pays"></select>
+    <select id="region"></select>
+    <select id="tri">
+      <option value="carte">Ordre de la carte</option>
+      <option value="prix-">Prix croissant</option>
+      <option value="prix+">Prix décroissant</option>
+      <option value="mill-">Millésime le plus vieux</option>
+      <option value="mill+">Millésime le plus récent</option>
+      <option value="prod">Producteur A→Z</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <div id="results"></div>
+  <button id="more" hidden>Afficher plus</button>
+</main>
+<footer id="foot"></footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
